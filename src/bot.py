@@ -8,7 +8,16 @@ def get_bid(body):
     own_cards = body["cards"]
 
     # Considering J and 9 as strong cards
-    strong_cards = [idx for idx in own_cards if (idx[0] == 'J') or (idx[0] == '9')]
+    strong_cards = {'J':0, '9':0}
+    for idx in range(len(own_cards)):
+        card = own_cards[idx][0]
+        if card in strong_cards:
+            if card == 'J':
+                strong_cards[card] += 3
+            else:
+                strong_cards[card] += 2
+
+    strong_cards_sum = sum(strong_cards.values())
     print("\n\nStrong cards", strong_cards)
 
     # when you are the first player to bid, use the minimum bid
@@ -24,7 +33,7 @@ def get_bid(body):
 
     # when you have two or more J or 9, go to a higher bid
     # if the bid is already 18, pass
-    if len(strong_cards) > 1 and last_bid < 19:
+    if (strong_cards_sum >= 5  and last_bid < 18 and last_bid != 0):
         return {"bid": last_bid+1}
     else:
         return {"bid": PASS_BID}
