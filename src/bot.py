@@ -33,8 +33,11 @@ def get_bid(body):
 
     # when you have two or more J or 9, go to a higher bid
     # if the bid is already 18, pass
-    if (strong_cards_sum >= 5  and last_bid < 18 and last_bid != 0):
-        return {"bid": last_bid+1}
+    if (strong_cards_sum >= 5 and last_bid < 19 and last_bid != 0 ):
+        if(strong_cards["J"] <= 1 and last_bid >=17):
+            return {"bid": PASS_BID}
+        else:
+            return {"bid": last_bid+1}
     else:
         return {"bid": PASS_BID}
 
