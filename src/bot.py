@@ -1,4 +1,4 @@
-from utils import get_suit, get_suit_cards, CARDS_DICT, get_partner_idx, pick_winning_card_idx, is_high, index, find
+from utils import get_suit, get_min_max_cards, get_suit_cards, CARDS_DICT, get_partner_idx, pick_winning_card_idx, is_high, index, find
 
 
 def get_bid(body):
@@ -18,28 +18,32 @@ def get_bid(body):
                 strong_cards[card] += 2
 
     strong_cards_sum = sum(strong_cards.values())
-    print("\n\nStrong cards", strong_cards)
+    # print("\n\nStrong cards", strong_cards)
 
+    bid_history = body["bidHistory"]
     # when you are the first player to bid, use the minimum bid
-    if len(body["bidHistory"]) == 0:
+    if len(bid_history) == 0:
         return {"bid": MIN_BID}
 
     # Determining the last bid?
-    last_bid = body["bidHistory"][-1][1]
-    defender_bid = body["bidState"]['defenderBid']
-    if(last_bid == 0):
-        last_bid = defender_bid
-    print("\n\n Last Bid", last_bid)
+    bid_list = []
+    for i in bid_history:
+        bid_list.append(i[1])
+    last_max_bid = max(bid_list)
+    # print("\n\n Last Bid1", last_max_bid)
 
     # when you have two or more J or 9, go to a higher bid
     # if the bid is already 18, pass
-    if (strong_cards_sum >= 5 and last_bid < 19 and last_bid != 0 ):
-        if(strong_cards["J"] <= 1 and last_bid >=17):
-            return {"bid": PASS_BID}
+    if(strong_cards_sum >= 5 and last_max_bid != 0):
+        if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
+            return {"bid": last_max_bid+1}
+        elif(strong_cards["J"]/3 > 1 and last_max_bid < 19):
+            return {"bid": last_max_bid+1}
         else:
-            return {"bid": last_bid+1}
+            return {"bid": PASS_BID}
     else:
         return {"bid": PASS_BID}
+        
 
     # For choose_trump_suit testing purposes
     # if last_bid < 20:
@@ -87,7 +91,7 @@ def get_play_card(body):
         if card in point_cards:
             point_cards[card].append(idx)
     # print("\n\n Point Cards", point_cards)
-
+    #  
     # if we are the one to throw the first card in the hands, throw the highest cards
     if (not first_card):
         if(len(point_cards["J"]) > 0):
@@ -106,16 +110,18 @@ def get_play_card(body):
 
     # if we have the suit with respect to the first card, we throw it
     if len(own_suit_cards) > 0:
-        # We throw the highest one we have no matter what
-        # for own_suit_card in own_suit_cards:
-        own_suit_card_indv = [idx for idx in own_suit_cards]
-        max_own_suit_card = own_suit_cards[-1]
-        # print("\n\nAvailable suits", own_suit_card_indv)
-        for card_name in own_suit_card_indv:
-            if CARDS_DICT[max_own_suit_card[0]]["points"] < CARDS_DICT[card_name[0]]["points"]:
-                max_own_suit_card = card_name
-        # print("\n Passed", max_own_suit_card)
-        return {"card": max_own_suit_card}
+        max_own_card, min_own_card = get_min_max_cards(own_suit_cards)
+        max_played_card, min_played_card = get_min_max_cards(played)
+
+        played_suits = [get_suit(card) for card in played]
+        has_trump = True if trump_suit in played_suits else False
+        print("\n\n", max_own_card, max_played_card, min_own_card)
+        # We throw the highest one if we have one higher than highest played card
+        # Else we throw the lowest card
+        if (max_played_card>max_own_card or (trump_revealed and has_trump)):
+            return {"card": min_own_card}
+        else:
+            return{"card":max_own_card}
 
     # if we don't have cards that follow the suit
     # @example
