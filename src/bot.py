@@ -84,44 +84,33 @@ def get_play_card(body):
     first_turn = (my_idx + 4 - len(played)) % 4
     is_bidder = trump_suit and not trump_revealed
 
-    # Determining the number of and indices of point cards we have 
-    point_cards = {'J':[], '9':[], '1':[], 'T':[]}
-    for idx in range(len(own_cards)):
-        card = own_cards[idx][0]
-        if card in point_cards:
-            point_cards[card].append(idx)
-    # print("\n\n Point Cards", point_cards)
-    #  
-    # if we are the one to throw the first card in the hands, throw the highest cards
+
+    # Getting min and max cards 
+    own_card_dict, max_own_card, min_own_card = get_min_max_cards(own_cards)
+ 
+    # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
-        if(len(point_cards["J"]) > 0):
-            return {"card": own_cards[point_cards["J"][0]]}
-        elif(len(point_cards["9"]) > 0):
-            return {"card": own_cards[point_cards["9"][0]]}
-        elif(len(point_cards["1"]) > 0):
-            return {"card": own_cards[point_cards["1"][0]]}
-        elif(len(point_cards["T"]) > 0):
-            return {"card": own_cards[point_cards["T"][0]]}
-        else:
-            return {"card": own_cards[-1]}
+        return{"card": max_own_card}
+    
 
     first_card_suit = get_suit(first_card)
     own_suit_cards = get_suit_cards(own_cards, first_card_suit)
 
     # if we have the suit with respect to the first card, we throw it
     if len(own_suit_cards) > 0:
-        max_own_card, min_own_card = get_min_max_cards(own_suit_cards)
-        max_played_card, min_played_card = get_min_max_cards(played)
+        own_suit_card_dict, max_own_suit_card, min_own_suit_card = get_min_max_cards(own_suit_cards)
+        played_card_dict, max_played_card, _ = get_min_max_cards(played)
 
         played_suits = [get_suit(card) for card in played]
         has_trump = True if trump_suit in played_suits else False
-        print("\n\n", max_own_card, max_played_card, min_own_card)
+        print("\n\n", max_own_suit_card, max_played_card, min_own_suit_card)
         # We throw the highest one if we have one higher than highest played card
         # Else we throw the lowest card
-        if (max_played_card>max_own_card or (trump_revealed and has_trump)):
-            return {"card": min_own_card}
+        print("\n\n", has_trump)
+        if (played_card_dict[max_played_card] > own_suit_card_dict[max_own_suit_card] or has_trump):
+            return {"card": min_own_suit_card}
         else:
-            return{"card":max_own_card}
+            return{"card":max_own_suit_card}
 
     # if we don't have cards that follow the suit
     # @example
