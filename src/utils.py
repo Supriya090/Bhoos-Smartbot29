@@ -54,10 +54,10 @@ def get_card_info(card):
 
 def get_min_max_cards(cards):
     card_point_dict = {}
-    print("\n\n Own suit:", cards)
+    # print("\n\n Own suit:", cards)
     for card in cards:
         card_point_dict[card] = CARDS_DICT[card[0]]["points"] + CARDS_DICT[card[0]]["order"] * 0.1
-    print(card_point_dict)
+    # print(card_point_dict)
     max_card = max(card_point_dict, key=card_point_dict.get)
     min_card = min(card_point_dict, key=card_point_dict.get)
     return card_point_dict, max_card, min_card

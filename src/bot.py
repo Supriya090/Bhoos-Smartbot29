@@ -86,13 +86,12 @@ def get_play_card(body):
 
 
     # Getting min and max cards 
-    own_card_dict, max_own_card, min_own_card = get_min_max_cards(own_cards)
+    _, max_own_card, _ = get_min_max_cards(own_cards)
  
     # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
         return{"card": max_own_card}
     
-
     first_card_suit = get_suit(first_card)
     own_suit_cards = get_suit_cards(own_cards, first_card_suit)
 
@@ -104,9 +103,17 @@ def get_play_card(body):
         played_suits = [get_suit(card) for card in played]
         has_trump = True if trump_suit in played_suits else False
         print("\n\n", max_own_suit_card, max_played_card, min_own_suit_card)
+
+        # If your partner has thrown the highest card, increase points by throwing your highest
+        if(not has_trump):
+            if(len(played) > 1):
+                print("\n\n Partner's card", list(played_card_dict.keys())[len(played) - 2])
+                if(max_played_card == list(played_card_dict.keys())[len(played) - 2]):
+                    return{"card":max_own_suit_card}
+        
         # We throw the highest one if we have one higher than highest played card
         # Else we throw the lowest card
-        print("\n\n", has_trump)
+        # print("\n\n", has_trump)
         if (played_card_dict[max_played_card] > own_suit_card_dict[max_own_suit_card] or has_trump):
             return {"card": min_own_suit_card}
         else:
