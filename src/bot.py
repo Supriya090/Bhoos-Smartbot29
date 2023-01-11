@@ -182,8 +182,8 @@ def get_play_card(body):
     # If partner has the highest throw maximum
     if (len(own_trump_suit_cards) == 0):
         if(len(played) > 1):
-            print("\n\n Partner's card", list(played_card_dict.keys())[len(played) - 2])
-            if(max_played_card == list(played_card_dict.keys())[len(played) - 2]):
+            print("\n\n Partner's card", partner_card)
+            if(max_played_card == partner_card):
                 return{"card":max_own_card}
             else:
                 return {"card": min_own_card}
@@ -192,13 +192,12 @@ def get_play_card(body):
         if(len(get_suit_cards(played, trump_suit)) == 0):
             _, max_trump_suit_card ,min_trump_suit_card = get_min_max_cards(own_trump_suit_cards)
             if(len(played) > 1):
-                if(max_played_card == list(played_card_dict.keys())[len(played) - 2]):
+                if(max_played_card == partner_card):
                     return{"card":max_trump_suit_card}
             return {"card": min_trump_suit_card}
 
     did_reveal_the_trump_in_this_hand = trump_revealed and trump_revealed["playerId"] == own_id and trump_revealed["hand"] == (
         len(hand_history) + 1)
-
 
     # trump was revealed by me in this hand
     # or
@@ -209,11 +208,6 @@ def get_play_card(body):
         if (is_bidder):
             if(max_played_card == partner_card):
                 response["card"] = max_own_card
-                return response
-            
-            # Refrain from revealing the trump when the current round has no value cards.
-            if(played_card_dict[max_played_card] < 1):
-                response["card"] = min_own_card
                 return response
 
         _, max_trump_suit_card ,min_trump_suit_card = get_min_max_cards(own_trump_suit_cards)
