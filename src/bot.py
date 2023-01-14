@@ -1,4 +1,4 @@
-from utils import get_suit, get_min_max_cards, get_suit_cards, CARDS_DICT, get_partner_idx, pick_winning_card_idx, is_high, index, find
+from utils import get_suit, get_min_max_cards, get_suit_cards, get_partner_idx, pick_winning_card_idx, is_high, index, find
 
 
 def get_bid(body):
