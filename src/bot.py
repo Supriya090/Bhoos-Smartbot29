@@ -113,10 +113,9 @@ def get_play_card(body):
  
     # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
-        if(len(own_cards) == 8 and max_own_card[0] != 'J'):
-            return{"card": min_own_card}
-        elif(len(own_cards) == 7 and max_own_card[0] != 'J'):
-            return{"card": min_own_card}
+        if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and max_own_card[0] != 'J'):
+            if(get_suit(min_own_card) != trump_suit):
+                return{"card": min_own_card}
         else:
             return{"card": max_own_card}
     
