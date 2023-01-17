@@ -109,13 +109,15 @@ def get_play_card(body):
 
 
     # Getting min and max cards 
-    _, max_own_card, min_own_card = get_min_max_cards(own_cards)
+    own_cards_dict, max_own_card, min_own_card = get_min_max_cards(own_cards)
  
     # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
         if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and max_own_card[0] != 'J'):
             if(get_suit(min_own_card) != trump_suit):
                 return{"card": min_own_card}
+            else:
+                return{"card": list(own_cards_dict)[1]}
         else:
             return{"card": max_own_card}
     
@@ -201,10 +203,10 @@ def get_play_card(body):
             # else:
             #     return {"card": min_own_card}
             return {"card": min_trump_suit_card}
-        # else:
-        #     played_trump_suit_cards_dict, max_played_trump_suit_card, _ = get_min_max_cards(played_trump_suit_cards)
-        #     if(played_trump_suit_cards_dict[max_played_trump_suit_card] > own_trump_suit_cards[max_trump_suit_card]):
-        #         return{"card": max_trump_suit_card}
+        else:
+            played_trump_suit_cards_dict, _, _ = get_min_max_cards(played_trump_suit_cards)
+            if(list(played_trump_suit_cards_dict)[-1] < list(own_trump_suit_cards)[-1]):
+                return{"card": max_trump_suit_card}
 
     did_reveal_the_trump_in_this_hand = trump_revealed and trump_revealed["playerId"] == own_id and trump_revealed["hand"] == (
         len(hand_history) + 1)
