@@ -2,3 +2,4 @@ __pycache__/
 bhoos_env/
 src/__pycache__/
 *.tar.gz
+src/test.py

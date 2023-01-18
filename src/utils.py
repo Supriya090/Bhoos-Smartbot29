@@ -60,9 +60,11 @@ def get_min_max_cards(cards):
     # print(card_point_dict)
     max_card = max(card_point_dict, key=card_point_dict.get)
     min_card = min(card_point_dict, key=card_point_dict.get)
-    sorted_card_dict = dict(sorted(card_point_dict.items(), key=lambda item: item[1]))
-    return sorted_card_dict, max_card, min_card
+    return card_point_dict, max_card, min_card
 
+def sort_dict(card_dict):
+    return dict(sorted(card_dict.items(), key=lambda item: item[1]))
+    
 def is_high(highest_card, compare_card, trump_suit=None):
     is_highest_card_trump = get_suit(highest_card) == trump_suit
     is_compare_card_trump = get_suit(compare_card) == trump_suit
