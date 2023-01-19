@@ -45,6 +45,8 @@ def get_bid(body):
 
     # If you have three or more cards of the same suit, bid up to 18
     print("\n\n Initial suit", initial_suit_list)
+    if(len(set(initial_suit_list)) == 1 and last_max_bid != 0):
+        return{"bid": last_max_bid+1}
     if(len(set(initial_suit_list)) <= 2 and last_max_bid != 0):
         if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
             return {"bid": last_max_bid + 1}
@@ -69,8 +71,8 @@ def get_bid(body):
         
 
     # For choose_trump_suit testing purposes
-    # if last_bid < 20:
-    #     return{"bid": last_bid + 1}
+    # if last_max_bid < 19:
+    #     return{"bid": last_max_bid + 1}
     # else:
     #     return{"bid": PASS_BID}
 
@@ -113,23 +115,31 @@ def get_play_card(body):
     sorted_own_card_dict = sort_dict(own_cards_dict)
     # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
-        if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and max_own_card[0] != 'J'):
+        if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and get_suit(max_own_card) != 'J'):
             if(get_suit(min_own_card) != trump_suit):
                 return{"card": min_own_card}
             else:
                 return{"card": list(sorted_own_card_dict)[1]}
         else:
-            return{"card": max_own_card}
+            if(len(own_cards) > 1):
+                if(get_suit(max_own_card) == trump_suit and get_suit(list(sorted_own_card_dict)[-2]) == get_suit(max_own_card)):
+                    return{"card": list(sorted_own_card_dict)[-2]}
+                else:
+                    return{"card": max_own_card}
+            else:
+                return{"card": max_own_card}
     
     first_card_suit = get_suit(first_card)
     own_suit_cards = get_suit_cards(own_cards, first_card_suit)
 
     # Getting played card info
     played_card_dict, max_played_card, _ = get_min_max_cards(played)
+    sorted_played_card_dict = sort_dict(played_card_dict)
     played_suits = [get_suit(card) for card in played]
     has_trump = True if trump_suit in played_suits else False
 
     partner_card = list(played_card_dict.keys())[len(played) - 2]
+    
     # if we have the suit with respect to the first card, we throw it
     if len(own_suit_cards) > 0:
         own_suit_card_dict, max_own_suit_card, min_own_suit_card = get_min_max_cards(own_suit_cards)
@@ -141,8 +151,10 @@ def get_play_card(body):
         if(len(played) > 1):
             print("\n\n Partner's card", partner_card)
             if(has_trump and trump_suit != first_card_suit):
+                played_trump_suit_cards = get_suit_cards(played, trump_suit)
+                played_trump_suit_cards_dict, max_played_trump_suit_card, _ = get_min_max_cards(played_trump_suit_cards)
                 if(len(played_suits)>1):
-                    if(trump_suit != partner_card[1]):
+                    if(trump_suit != partner_card[1] or max_played_trump_suit_card != partner_card):
                         return{"card":min_own_suit_card}
                     else:
                         return{"card":max_own_suit_card}
@@ -189,42 +201,51 @@ def get_play_card(body):
     # Get my min and max trump suit cards
     own_trump_suit_cards = get_suit_cards(own_cards, trump_suit)
     played_trump_suit_cards = get_suit_cards(played, trump_suit)
-
     # we don't have any trump suit cards, throw minimum
     # If partner has the highest throw maximum
     if (len(own_trump_suit_cards) == 0):
         if(len(played) > 1):
             print("\n\n Partner's card", partner_card)
             if(max_played_card == partner_card):
+                # If among the multiple max cards played, one of them is trump and the trump is not partner's, return the min card
+                if(has_trump and get_suit(partner_card) != trump_suit):
+                    return{"card": min_own_card}
+                # if(list(sorted_played_card_dict)[-1][0] == list(sorted_played_card_dict)[-2][0]):
+                #     return{"card": min_own_card}
                 return{"card":max_own_card}
             else:
                 return {"card": min_own_card}
         return{"card": min_own_card}
     else:
         own_trump_suit_cards_dict, max_trump_suit_card ,min_trump_suit_card = get_min_max_cards(own_trump_suit_cards)
+        response = {}
+        if (not trump_revealed):
+            response["revealTrump"]= True
         if(len(played_trump_suit_cards) == 0):
             if(len(played) > 1):
                 if(max_played_card == partner_card):
-                    return{"card":max_trump_suit_card}
+                    response["card"] = max_trump_suit_card
                 else:
-                    return{"card": min_trump_suit_card}
+                    response["card"] = min_trump_suit_card
+                return response   
             # If max played card has points more than 1, throw a random card 
             # if(played_card_dict[max_played_card] > 1):
             #     return {"card": min_trump_suit_card}
             # else:
             #     return {"card": min_own_card}
-            return {"card": min_trump_suit_card}
+            response["card"] = min_trump_suit_card
+            return response
         else:
-            played_trump_suit_cards_dict, max_played_trump_suit_card, _ = get_min_max_cards(played_trump_suit_cards)
             sorted_own_trump_suit_cards = sort_dict(own_trump_suit_cards_dict)
-
+            played_trump_suit_cards_dict, max_played_trump_suit_card, _ = get_min_max_cards(played_trump_suit_cards)
             if(played_trump_suit_cards_dict[max_played_trump_suit_card] < own_trump_suit_cards_dict[max_trump_suit_card]):
                 min_winning_card = max_trump_suit_card
                 for own_trump_suit_card in sorted_own_trump_suit_cards:
-                    if(played_trump_suit_cards[max_played_trump_suit_card] < sorted_own_trump_suit_cards[own_trump_suit_card]):
+                    if(played_trump_suit_cards_dict[max_played_trump_suit_card] < sorted_own_trump_suit_cards[own_trump_suit_card]):
                         min_winning_card = own_trump_suit_card
                         break
-                return{"card":min_winning_card}
+                response["card"]=min_winning_card
+                return response
             
 
     did_reveal_the_trump_in_this_hand = trump_revealed and trump_revealed["playerId"] == own_id and trump_revealed["hand"] == (
@@ -237,16 +258,20 @@ def get_play_card(body):
         response = {}
         # If my partner is winning and I am the bidder, throw your highest card, doesn't have to be a trump
         if (is_bidder):
-            response["revealTrump"] = True
+            if (not trump_revealed):
+                response["revealTrump"] = True
             if(len(played) > 1):
                 has_own_trump = True if trump_suit in own_cards else False
                 if(max_played_card == partner_card and has_own_trump):
                     response["card"] = max_trump_suit_card
-                    return response
+                return response
 
         _, max_trump_suit_card ,min_trump_suit_card = get_min_max_cards(own_trump_suit_cards)
         # if there are no trumps in the played, throw your minimum trump suit card
         if (len(played_trump_suit_cards) == 0):
+            print("\n\n Goes here")
+            # return{"revealTrump": True}
+            response["revealTrump"] = True
             response["card"] = min_trump_suit_card
             return response
 
