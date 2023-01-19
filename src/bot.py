@@ -44,13 +44,16 @@ def get_bid(body):
         return {"bid": PASS_BID}    
 
     # If you have three or more cards of the same suit, bid up to 18
+    # If you have four cards of the same suit, bid up to 20
     print("\n\n Initial suit", initial_suit_list)
-    if(len(set(initial_suit_list)) == 1 and last_max_bid != 0):
+    if(len(set(initial_suit_list)) == 1 and last_max_bid != 0 and last_max_bid < 28):
         return{"bid": last_max_bid+1}
     if(len(set(initial_suit_list)) <= 2 and last_max_bid != 0):
-        if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
+        if(strong_cards["J"]/3 == 0 and last_max_bid < 17):
             return {"bid": last_max_bid + 1}
-        elif(strong_cards["J"]/3 > 1 and last_max_bid < 18):
+        if(strong_cards["J"]/3 <= 1 and last_max_bid < 18):
+            return {"bid": last_max_bid + 1}
+        elif(strong_cards["J"]/3 > 1 and last_max_bid < 19):
             return {"bid": last_max_bid + 1}
         else:
             return {"bid": PASS_BID}
@@ -122,7 +125,7 @@ def get_play_card(body):
                 return{"card": list(sorted_own_card_dict)[1]}
         else:
             if(len(own_cards) > 1):
-                if(get_suit(max_own_card) == trump_suit and get_suit(list(sorted_own_card_dict)[-2]) == get_suit(max_own_card)):
+                if(get_suit(max_own_card) == trump_suit and list(sorted_own_card_dict)[-2][0] == max_own_card[0]):
                     return{"card": list(sorted_own_card_dict)[-2]}
                 else:
                     return{"card": max_own_card}
