@@ -46,12 +46,16 @@ def get_bid(body):
     # If you have three or more cards of the same suit, bid up to 18
     # If you have four cards of the same suit, bid up to 20
     print("\n\n Initial suit", initial_suit_list)
+    max_suit = max(set(initial_suit_list), key = initial_suit_list.count)
+
+    _, max_own_card, _ = get_min_max_cards(own_cards)
+
     if(len(set(initial_suit_list)) == 1 and last_max_bid != 0 and last_max_bid < 28):
         return{"bid": last_max_bid+1}
     if(len(set(initial_suit_list)) <= 2 and last_max_bid != 0):
-        if(strong_cards["J"]/3 == 0 and last_max_bid < 17):
+        if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
             return {"bid": last_max_bid + 1}
-        if(strong_cards["J"]/3 <= 1 and last_max_bid < 18):
+        elif(max_own_card[0] == 'J' and get_suit(max_own_card) == max_suit and last_max_bid < 18):
             return {"bid": last_max_bid + 1}
         elif(strong_cards["J"]/3 > 1 and last_max_bid < 19):
             return {"bid": last_max_bid + 1}
@@ -118,7 +122,7 @@ def get_play_card(body):
     sorted_own_card_dict = sort_dict(own_cards_dict)
     # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
-        if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and get_suit(max_own_card) != 'J'):
+        if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and max_own_card[0] != 'J'):
             if(get_suit(min_own_card) != trump_suit):
                 return{"card": min_own_card}
             else:
@@ -231,12 +235,11 @@ def get_play_card(body):
                 else:
                     response["card"] = min_trump_suit_card
                 return response   
-            # If max played card has points more than 1, throw a random card 
+            # If max played card has no points, do not waste your trump card, throw a random card 
             # if(played_card_dict[max_played_card] > 1):
-            #     return {"card": min_trump_suit_card}
+            #     response["card"]= min_trump_suit_card
             # else:
-            #     return {"card": min_own_card}
-            response["card"] = min_trump_suit_card
+            #     response["card"]= min_own_card
             return response
         else:
             sorted_own_trump_suit_cards = sort_dict(own_trump_suit_cards_dict)
