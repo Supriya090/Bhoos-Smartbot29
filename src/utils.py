@@ -66,8 +66,8 @@ def get_min_max_cards(cards):
     min_card = min(card_point_dict, key=card_point_dict.get)
     return card_point_dict, max_card, min_card
 
-def sort_dict(card_dict):
-    return dict(sorted(card_dict.items(), key=lambda item: item[1]))
+def sort_dict(card_dict, rev = False):
+    return dict(sorted(card_dict.items(), key=lambda item: item[1], reverse=rev))
     
 def is_high(highest_card, compare_card, trump_suit=None):
     is_highest_card_trump = get_suit(highest_card) == trump_suit

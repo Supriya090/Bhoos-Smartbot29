@@ -27,7 +27,7 @@ def get_bid(body):
     if len(bid_history) == 0:
         return {"bid": MIN_BID}
 
-    # Determining the last bid?
+    # Determining the last max bid
     bid_list = []
     for i in bid_history:
         bid_list.append(i[1])
@@ -51,6 +51,7 @@ def get_bid(body):
     # If you have four cards of the same suit, bid up to 20
     max_suit = max(set(initial_suit_list), key = initial_suit_list.count)
 
+    max_suit_count = initial_suit_list.count(max_suit)
     _, max_own_card, _ = get_min_max_cards(own_cards)
 
     suitable_bid = get_player_bid(last_max_bid, isDefender)
@@ -61,7 +62,7 @@ def get_bid(body):
             return {"bid": MIN_BID}
         if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
             return {"bid": suitable_bid}
-        elif(max_own_card[0] == 'J' and get_suit(max_own_card) == max_suit and last_max_bid < 18):
+        elif(max_own_card[0] == 'J' and get_suit(max_own_card) == max_suit and max_suit_count > 2 and last_max_bid < 18):
             return {"bid": suitable_bid}
         elif(strong_cards["J"]/3 > 1 and last_max_bid < 19):
             return {"bid": suitable_bid}
@@ -209,12 +210,25 @@ def get_play_card(body):
 
     # trump has not been revealed yet, and we don't know what the trump is
     # let's reveal the trump
-    if(len(played) > 1 and max_played_card == partner_card and not trump_revealed):
-        return {"card": max_own_card}
+    if(len(played) > 1 and max_played_card == partner_card and played_card_dict[max_played_card] > 1 and not trump_revealed):
+        max_non_trump_card = max_own_card
+        desc_sorted_own_card_dict = sort_dict(own_cards_dict, True)
+        if(is_bidder):
+            for card in desc_sorted_own_card_dict:
+                if get_suit(card) != trump_suit:
+                    max_non_trump_card = card
+                    break
+        return {"card": max_non_trump_card}
     
     print("\n\n", not trump_revealed)
     if(played_card_dict[max_played_card] < 1 and not trump_revealed):
-        return {"card": min_own_card}
+        min_non_trump_card = min_own_card
+        if(is_bidder):
+            for card in sorted_own_card_dict:
+                if get_suit(card) != trump_suit:
+                    min_non_trump_card = card
+                    break
+        return {"card": min_non_trump_card}
 
     if (not trump_suit and not trump_revealed):
         return {"revealTrump": True}
