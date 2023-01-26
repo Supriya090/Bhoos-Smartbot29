@@ -1,4 +1,4 @@
-from utils import get_suit, get_min_max_cards, get_suit_cards, get_partner_idx, pick_winning_card_idx, is_high, index, find, sort_dict
+from utils import get_suit, get_player_bid, get_min_max_cards, get_suit_cards, get_partner_idx, pick_winning_card_idx, is_high, index, find, sort_dict
 
 
 def get_bid(body):
@@ -38,6 +38,10 @@ def get_bid(body):
     initial_suit_list = []
     for card in own_cards:
         initial_suit_list.append(get_suit(card))
+    
+    isDefender = True if body["playerId"] == body["bidState"]["defenderId"] else False
+    print("\n\n PlayerId", body["playerId"])
+    print("\n\n DefenderId", body["bidState"]["defenderId"])
 
     # Avoid bidding when you have one card from each suit.
     if(len(set(initial_suit_list)) == 4 and strong_cards["J"]/3 <= 1):
@@ -45,36 +49,34 @@ def get_bid(body):
 
     # If you have three or more cards of the same suit, bid up to 18
     # If you have four cards of the same suit, bid up to 20
-    print("\n\n Initial suit", initial_suit_list)
     max_suit = max(set(initial_suit_list), key = initial_suit_list.count)
 
     _, max_own_card, _ = get_min_max_cards(own_cards)
 
-    if(len(set(initial_suit_list)) == 1 and last_max_bid < 28 and last_max_bid != 0):
-        return{"bid": last_max_bid+1}
+    suitable_bid = get_player_bid(last_max_bid, isDefender)
+    if(len(set(initial_suit_list)) == 1 and last_max_bid < 19 and last_max_bid != 0):
+        return{"bid": suitable_bid}
     if(len(set(initial_suit_list)) <= 2):
         if(last_max_bid == 0):
             return {"bid": MIN_BID}
         if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
-            return {"bid": last_max_bid + 1}
+            return {"bid": suitable_bid}
         elif(max_own_card[0] == 'J' and get_suit(max_own_card) == max_suit and last_max_bid < 18):
-            return {"bid": last_max_bid + 1}
+            return {"bid": suitable_bid}
         elif(strong_cards["J"]/3 > 1 and last_max_bid < 19):
-            return {"bid": last_max_bid + 1}
+            return {"bid": suitable_bid}
         else:
             return {"bid": PASS_BID}
 
     # when you have two or more J or 9, go to a higher bid
     # if the bid is already 18, pass
-    if(strong_cards_sum >= 5):
-        if(last_max_bid == 0):
-            return {"bid": MIN_BID}
+    if(strong_cards_sum >= 5 and last_max_bid != 0):
         if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
-            return {"bid": last_max_bid+1}
+            return {"bid": suitable_bid}
         elif(strong_cards["J"]/3 > 1 and last_max_bid < 18):
-            return {"bid": last_max_bid+1}
+            return {"bid": suitable_bid}
         elif(strong_cards["J"]/3 > 1 and len(set(initial_suit_list)) <= 2 and last_max_bid < 19):
-            return {"bid": last_max_bid+1}
+            return {"bid": suitable_bid}
         else:
             return {"bid": PASS_BID}
     else:
@@ -172,8 +174,9 @@ def get_play_card(body):
             else:
                 if (played_card_dict[max_played_card] < own_suit_card_dict[max_own_suit_card]):
                     min_winning_card = max_own_suit_card
-                    for own_suit_card in own_suit_card_dict:
+                    for own_suit_card in sorted_own_suit_card_dict:
                         if(played_card_dict[max_played_card] < own_suit_card_dict[own_suit_card]):
+                            print("\n\n Partner's card", own_suit_card)
                             min_winning_card = own_suit_card
                             break
                     return{"card":min_winning_card}
@@ -206,6 +209,13 @@ def get_play_card(body):
 
     # trump has not been revealed yet, and we don't know what the trump is
     # let's reveal the trump
+    if(len(played) > 1 and max_played_card == partner_card and not trump_revealed):
+        return {"card": max_own_card}
+    
+    print("\n\n", not trump_revealed)
+    if(played_card_dict[max_played_card] < 1 and not trump_revealed):
+        return {"card": min_own_card}
+
     if (not trump_suit and not trump_revealed):
         return {"revealTrump": True}
 
@@ -235,7 +245,10 @@ def get_play_card(body):
         if(len(played_trump_suit_cards) == 0):
             if(len(played) > 1):
                 if(max_played_card == partner_card):
-                    response["card"] = max_trump_suit_card
+                    if(max_trump_suit_card[0] == 'J' or max_trump_suit_card[0] == '9'):
+                        response["card"] = min_trump_suit_card
+                    else:
+                        response["card"] = max_trump_suit_card
                 else:
                     response["card"] = min_trump_suit_card
                 return response   

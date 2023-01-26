@@ -36,6 +36,10 @@ def get_partner_idx(my_idx):
 def get_rank(card):
     return card[0]
 
+def get_player_bid(last_max_bid, isDefender):
+    if(isDefender):
+        return last_max_bid
+    return last_max_bid + 1
 
 CARDS_DICT = {
     "J": {"points": 3, "order": 8},
