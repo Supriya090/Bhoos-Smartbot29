@@ -2,6 +2,7 @@
 
 # Always use alpine version to minimize docker image size. If alpine version 
 # is not available, use the smallest base image available.
+# ENV BUILDKIT_PROGRESS=plain
 FROM python:3.11-alpine
 
 # This will be the base directory where our project will live. 

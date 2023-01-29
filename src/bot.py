@@ -57,12 +57,14 @@ def get_bid(body):
     suitable_bid = get_player_bid(last_max_bid, isDefender)
     if(len(set(initial_suit_list)) == 1 and last_max_bid < 19 and last_max_bid != 0):
         return{"bid": suitable_bid}
-    if(len(set(initial_suit_list)) <= 2):
+
+    print("\n\n Max suit count: ", max_suit_count)
+    if(len(set(initial_suit_list)) <= 2 and max_suit_count > 2):
         if(last_max_bid == 0):
             return {"bid": MIN_BID}
         if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
             return {"bid": suitable_bid}
-        elif(max_own_card[0] == 'J' and get_suit(max_own_card) == max_suit and max_suit_count > 2 and last_max_bid < 18):
+        elif(max_own_card[0] == 'J' and get_suit(max_own_card) == max_suit and last_max_bid < 18):
             return {"bid": suitable_bid}
         elif(strong_cards["J"]/3 > 1 and last_max_bid < 19):
             return {"bid": suitable_bid}
@@ -72,11 +74,9 @@ def get_bid(body):
     # when you have two or more J or 9, go to a higher bid
     # if the bid is already 18, pass
     if(strong_cards_sum >= 5 and last_max_bid != 0):
-        if(strong_cards["J"]/3 <= 1 and last_max_bid < 17):
+        if(strong_cards["J"]/3 > 0 and last_max_bid < 17):
             return {"bid": suitable_bid}
         elif(strong_cards["J"]/3 > 1 and last_max_bid < 18):
-            return {"bid": suitable_bid}
-        elif(strong_cards["J"]/3 > 1 and len(set(initial_suit_list)) <= 2 and last_max_bid < 19):
             return {"bid": suitable_bid}
         else:
             return {"bid": PASS_BID}
@@ -129,7 +129,7 @@ def get_play_card(body):
     sorted_own_card_dict = sort_dict(own_cards_dict)
     # if we are the one to throw the first card in the hands, throw the highest card
     if (not first_card):
-        if(((len(own_cards) == 8) or (len(own_cards) == 7) or (len(own_cards) == 6)) and max_own_card[0] != 'J'):
+        if(len(own_cards) > 5 and max_own_card[0] != 'J'):
             if(get_suit(min_own_card) != trump_suit):
                 return{"card": min_own_card}
             else:
@@ -148,7 +148,6 @@ def get_play_card(body):
 
     # Getting played card info
     played_card_dict, max_played_card, _ = get_min_max_cards(played)
-    sorted_played_card_dict = sort_dict(played_card_dict)
     played_suits = [get_suit(card) for card in played]
     has_trump = True if trump_suit in played_suits else False
 
@@ -188,7 +187,6 @@ def get_play_card(body):
                 
         # We throw the highest one if we have one higher than highest played card
         # Else we throw the lowest card
-        # print("\n\n", has_trump)
         if (played_card_dict[max_played_card] > own_suit_card_dict[max_own_suit_card] or has_trump):
             return {"card": min_own_suit_card}
         else:
@@ -215,7 +213,7 @@ def get_play_card(body):
         desc_sorted_own_card_dict = sort_dict(own_cards_dict, True)
         if(is_bidder):
             for card in desc_sorted_own_card_dict:
-                if get_suit(card) != trump_suit:
+                if get_suit(card) != trump_suit and card[0] != 'J':
                     max_non_trump_card = card
                     break
         return {"card": max_non_trump_card}
@@ -228,12 +226,14 @@ def get_play_card(body):
                 if get_suit(card) != trump_suit:
                     min_non_trump_card = card
                     break
-        return {"card": min_non_trump_card}
-
+            return {"card": min_non_trump_card}
+        else:
+            return {"revealTrump": True}
+        
     if (not trump_suit and not trump_revealed):
-        return {"revealTrump": True}
+            return {"revealTrump": True}
 
-    # Get my min and max trump suit cards
+    # Get min and max trump suit cards
     own_trump_suit_cards = get_suit_cards(own_cards, trump_suit)
     played_trump_suit_cards = get_suit_cards(played, trump_suit)
     # we don't have any trump suit cards, throw minimum
